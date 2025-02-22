@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Аналитика</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        /* Определяем основные переменные для дизайна */
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #e74c3c;
+            --hover-primary: #357ABD;
+            --bg-color: #f5f5f5;
+            --light-bg: #ffffff;
+            --border-color: #ddd;
+            --text-color: #333;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Базовые стили страницы */
+        body {
+            margin: 0;
+            font-family: var(--font-family);
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Шапка сайта */
+        header {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: var(--secondary-color);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .back-button:hover {
+            background: #c0392b;
+        }
+
+        /* Контейнер для основного контента */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Секция отчётов, общая стилизация для кнопок, форм и контейнеров с результатами */
+        .report-section {
+            background: var(--light-bg);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .report-section h2 {
+            margin-top: 0;
+        }
+
+        /* Стилизация кнопок */
+        button,
+        input[type="submit"] {
+            padding: 10px 15px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover,
+        input[type="submit"]:hover {
+            background: var(--hover-primary);
+        }
+
+        /* Стилизация форм */
+        form {
+            margin-top: 15px;
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        form input[type="date"],
+        form input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        /* Стилизация таблиц */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #eee;
+        }
+        /* Стили для сообщений об ошибках в контейнере аналитики */
+        #analytics-container p {
+            color: red;
+        }
+
+        /* Адаптивные стили */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+            .back-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            .report-section {
+                padding: 15px;
+            }
+            form input[type="date"],
+            form input[type="text"] {
+                padding: 6px;
+            }
+            table, th, td {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Верхняя панель -->
+    <header>
+        <h1>Аналитика</h1>
+        <a href="{% url 'owner_page' %}" class="back-button">Назад</a>
+    </header>
+
+    <!-- Основной контейнер -->
+    <div class="container">
+        <!-- Секция для "Продажи за текущий день" -->
+        <div class="report-section">
+            <button onclick="showTable('sales_today')">Продажи за текущий день</button>
+        </div>
+
+        <!-- Секция для "Продажи товаров за период (по артиклу)" -->
+        <div class="report-section">
+            <form id="art-sales-form" onsubmit="event.preventDefault(); showTable('art_sales')">
+                <h2>Продажи товаров за период (по артиклу)</h2>
+                <label for="art-start-date">Дата начала:</label>
+                <input type="date" id="art-start-date" name="start_date" required>
+                <label for="art-end-date">Дата окончания:</label>
+                <input type="date" id="art-end-date" name="end_date" required>
+                <button type="submit">Показать</button>
+            </form>
+        </div>
+
+        <!-- Секция для "Продажи цветов для артикула за период" -->
+        <div class="report-section">
+            <form id="art-color-sales-form" onsubmit="event.preventDefault(); showTable('art_color_sales')">
+                <h2>Продажи цветов для артикула за период</h2>
+                <label for="art-color-art">Артикул:</label>
+                <input type="text" id="art-color-art" name="art" required>
+                <label for="art-color-start-date">Дата начала:</label>
+                <input type="date" id="art-color-start-date" name="start_date" required>
+                <label for="art-color-end-date">Дата окончания:</label>
+                <input type="date" id="art-color-end-date" name="end_date" required>
+                <button type="submit">Показать</button>
+            </form>
+        </div>
+
+        <!-- Контейнер для отображения отчётов -->
+        <div id="analytics-container" class="report-section">
+            <h2>Выберите нужный отчёт</h2>
+        </div>
+
+        <div class="report-section">
+            <button onclick="showProductTable()">Остатки склад таблица</button>
+        </div>
+
+        <table id="product-table" border="1" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Артикул</th>
+                    <th>Цвет</th>
+                    <th>Количество</th>
+                    <th>Название</th>
+                    <th>Цена</th>
+
+
+
+
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+
+
+
+    <script>
+         function showProductTable() {
+            fetch('/products/all/')
+                .then(response => response.json())
+                .then(data => {
+                    let table = document.getElementById('product-table');
+                    let tbody = table.querySelector('tbody');
+                    tbody.innerHTML = ''; // Очистка старых данных
+
+                    // Сортируем данные по полю "art" (артикул)
+                    data.sort((a, b) => a.art - b.art);
+
+                    data.forEach(product => {
+                        let row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td>${product.id}</td>
+                            <td>${product.art}</td>
+                            <td>${product.color}</td>
+                            <td>${product.count}</td>
+                            <td>${product.name1}</td>
+                            <td>${product.price} сом</td>
+
+
+
+
+                        `;
+                    });
+
+                    table.style.display = 'block'; // Показываем таблицу
+                })
+                .catch(error => console.error('Ошибка загрузки данных:', error));
+        }
+
+        function showTable(type) {
+            let params = `type=${type}`;
+            if (type === 'art_sales') {
+                const startDate = document.getElementById('art-start-date').value;
+                const endDate = document.getElementById('art-end-date').value;
+                params += `&start_date=${startDate}&end_date=${endDate}`;
+            } else if (type === 'art_color_sales') {
+                const art = document.getElementById('art-color-art').value;
+                const startDate = document.getElementById('art-color-start-date').value;
+                const endDate = document.getElementById('art-color-end-date').value;
+                params += `&art=${art}&start_date=${startDate}&end_date=${endDate}`;
+            }
+
+            fetch(`/analiz?${params}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const container = document.getElementById('analytics-container');
+                    container.innerHTML = ''; // Очищаем предыдущий контент
+
+                    if (data.error) {
+                        container.innerHTML = `<p>${data.error}</p>`;
+                        return;
+                    }
+
+                    if (type === 'sales_today') {
+                        container.innerHTML = renderSalesToday(data);
+                    } else if (type === 'art_sales') {
+                        container.innerHTML = renderArtSales(data);
+                    } else if (type === 'art_color_sales') {
+                        container.innerHTML = renderArtColorSales(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки аналитики:', error);
+                    const container = document.getElementById('analytics-container');
+                    container.innerHTML = '<p>Ошибка загрузки данных.</p>';
+                });
+        }
+
+        // Отображение "Продажи за текущий день"
+        function renderSalesToday(data) {
+            const { paymentSummary, debtorSummary } = data;
+            let html = '<h2>Продажи за текущий день</h2>';
+
+            // Таблица по способу оплаты
+            html += '<h3>Итоги по способу оплаты</h3>';
+            html += '<table>';
+            html += '<tr><th>Способ оплаты</th><th>Сумма</th></tr>';
+            let totalSum = 0;
+            paymentSummary.forEach(row => {
+                html += `<tr>
+                    <td>${row.payment}</td>
+                    <td>${row.total_price.toFixed(2)}</td>
+                </tr>`;
+                totalSum += row.total_price;
+            });
+            html += `<tr style="font-weight:bold;">
+                        <td>Итого:</td>
+                        <td>${totalSum.toFixed(2)}</td>
+                    </tr>`;
+            html += '</table>';
+
+            // Таблица должников (если есть)
+            if (debtorSummary.length > 0) {
+                html += '<h3>Должники за сегодня</h3>';
+                html += '<table>';
+                html += '<tr><th>Должник</th><th>Сумма</th></tr>';
+                let debtorTotal = 0;
+                debtorSummary.forEach(row => {
+                    html += `<tr>
+                        <td>${row.debtor}</td>
+                        <td>${row.sum.toFixed(2)}</td>
+                    </tr>`;
+                    debtorTotal += row.sum;
+                });
+                html += `<tr style="font-weight:bold;">
+                        <td>Итого:</td>
+                        <td>${debtorTotal.toFixed(2)}</td>
+                    </tr>`;
+                html += '</table>';
+            } else {
+                html += '<p><em>Нет заказов с оплатой "Должник".</em></p>';
+            }
+            return html;
+        }
+
+        // Отображение "Продажи товаров за период (по артиклу)"
+        function renderArtSales(data) {
+            let html = '<h2>Продажи товаров за период (по артиклу)</h2>';
+            html += '<table>';
+            html += '<tr><th>Артикул</th><th>Количество</th></tr>';
+            let totalCount = 0;
+            data.forEach(item => {
+                html += `<tr>
+                    <td>${item.label}</td>
+                    <td>${item.value}</td>
+                </tr>`;
+                totalCount += parseInt(item.value);
+            });
+            html += `<tr style="font-weight:bold;">
+                        <td>Итого:</td>
+                        <td>${totalCount}</td>
+                    </tr>`;
+            html += '</table>';
+            return html;
+        }
+
+        // Отображение "Продажи цветов для артикула"
+        function renderArtColorSales(data) {
+            let html = '<h2>Продажи цветов для артикула</h2>';
+            html += '<table>';
+            html += '<tr><th>Цвет</th><th>Количество</th></tr>';
+            let totalCount = 0;
+            data.forEach(row => {
+                html += `<tr>
+                    <td>${row.color}</td>
+                    <td>${row.count}</td>
+                </tr>`;
+                totalCount += parseInt(row.count);
+            });
+            html += `<tr style="font-weight:bold;">
+                        <td>Итого:</td>
+                        <td>${totalCount}</td>
+                    </tr>`;
+            html += '</table>';
+            return html;
+        }
+    </script>
+</body>
+</html>

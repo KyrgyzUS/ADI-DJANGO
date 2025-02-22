@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Редактирование заказа №{{ order.id }}</title>
+  <style>
+    /* Основные переменные для дизайна */
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #e74c3c;
+      --hover-primary: #357ABD;
+      --hover-secondary: #c0392b;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --border-color: #ddd;
+      --container-max-width: 800px;
+    }
+
+    /* Сброс стилей */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .nav-links {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      background: var(--primary-color);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: var(--border-radius);
+      transition: background 0.3s;
+    }
+
+    .nav-links a:hover {
+      background: var(--hover-primary);
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    form input[type="text"],
+    form input[type="number"],
+    form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+
+    /* Стилизация таблицы с продуктами */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    table th,
+    table td {
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      text-align: left;
+    }
+
+    table th {
+      background: #eee;
+    }
+
+    #add-product {
+      margin-bottom: 20px;
+      display: inline-block;
+      padding: 10px 15px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #add-product:hover {
+      background: var(--hover-primary);
+    }
+
+    .remove-row {
+      padding: 5px 10px;
+      background: var(--secondary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .remove-row:hover {
+      background: var(--hover-secondary);
+    }
+
+    button[type="submit"] {
+      padding: 10px 20px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button[type="submit"]:hover {
+      background: var(--hover-primary);
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      form input[type="text"],
+      form input[type="number"],
+      form select {
+        font-size: 0.9rem;
+      }
+
+      button, #add-product, .remove-row, button[type="submit"] {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Навигация -->
+    <div class="nav-links">
+      <a href="{% url 'owner_page' %}">Назад на главную</a>
+      <a href="{% url 'orders_list' %}">Назад к списку заказов</a>
+    </div>
+
+    <header>
+      <h1>Редактирование заказа №{{ order.id }}</h1>
+    </header>
+
+    <form method="post" id="edit-order-form">
+      {% csrf_token %}
+      <label for="user">Пользователь:</label>
+      <input type="text" id="user" name="user" value="{{ order.user }}" required>
+
+      <label for="payment">Способ оплаты:</label>
+      <select id="payment" name="payment" required>
+        <option value="Банк" {% if order.payment == "Банк" %}selected{% endif %}>МБанк</option>
+        <option value="Наличные" {% if order.payment == "Наличные" %}selected{% endif %}>Наличные</option>
+      </select>
+
+      <label for="status">Статус:</label>
+      <input type="checkbox" id="status" name="status" {% if order.status %}checked{% endif %}>
+
+      <label for="discount">Скидка (руб.):</label>
+      <input type="number" id="discount" name="discount" value="{{ order.discount }}" step="0.01">
+
+      <label for="products">Продукты:</label>
+      <table id="products-table">
+        <thead>
+          <tr>
+            <th>Артикул</th>
+            <th>Цвет</th>
+            <th>Количество</th>
+            <th>Цена за единицу</th>
+            <th>Удалить</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td><input type="text" name="art[]" class="art-input" value="{{ product.art }}"></td>
+            <td>
+              <select name="colors[]" class="color-select">
+                <option value="{{ product.color }}" selected>{{ product.color }}</option>
+              </select>
+            </td>
+            <td><input type="number" name="counts[]" class="count-input" value="{{ product.count }}" min="1"></td>
+            <td>{{ product.unit_price }}</td>
+            <td><button type="button" class="remove-row">Удалить</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <button type="button" id="add-product">Добавить товар</button>
+      <br><br>
+
+      <button type="submit">Сохранить</button>
+    </form>
+  </div>
+
+  <script>
+    // Добавление нового товара
+    document.getElementById('add-product').addEventListener('click', function () {
+      const table = document.getElementById('products-table').querySelector('tbody');
+      const newRow = `
+        <tr>
+          <td><input type="text" name="art[]" class="art-input" placeholder="Введите артикул"></td>
+          <td>
+            <select name="colors[]" class="color-select">
+              <option value="">Выберите цвет</option>
+            </select>
+          </td>
+          <td><input type="number" name="counts[]" class="count-input" min="1" value="1"></td>
+          <td>-</td>
+          <td><button type="button" class="remove-row">Удалить</button></td>
+        </tr>
+      `;
+      table.insertAdjacentHTML('beforeend', newRow);
+    });
+
+    // Удаление строки товара
+    document.addEventListener('click', function (event) {
+      if (event.target.classList.contains('remove-row')) {
+        const row = event.target.closest('tr');
+        row.remove();
+      }
+    });
+
+    // Обработка ввода артикула: загрузка списка цветов по артикулу
+    document.addEventListener('input', function (event) {
+      if (event.target.classList.contains('art-input')) {
+        const row = event.target.closest('tr');
+        const art = event.target.value.trim();
+        const colorSelect = row.querySelector('.color-select');
+        const countInput = row.querySelector('.count-input');
+
+        if (art) {
+          fetch(`/products/get_colors/?art=${art}&include_count=true`)
+            .then(response => response.json())
+            .then(colors => {
+              colorSelect.innerHTML = '<option value="">Выберите цвет</option>';
+              colors.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.color;
+                option.textContent = item.color;
+                option.setAttribute('data-count', item.count);
+                colorSelect.appendChild(option);
+              });
+              // Сброс значения количества и снятие ограничения
+              countInput.value = 1;
+              countInput.removeAttribute('max');
+            })
+            .catch(err => console.error('Ошибка при загрузке цветов:', err));
+        } else {
+          colorSelect.innerHTML = '<option value="">Выберите цвет</option>';
+        }
+      }
+    });
+
+    // Обработка выбора цвета: установка максимального количества
+    document.addEventListener('change', function (event) {
+      if (event.target.classList.contains('color-select')) {
+        const selectedOption = event.target.selectedOptions[0];
+        const availableCount = selectedOption.getAttribute('data-count'); // Получаем доступное количество
+        const row = event.target.closest('tr');
+        const countInput = row.querySelector('.count-input');
+
+        if (availableCount) {
+          countInput.setAttribute('max', availableCount);
+          if (parseInt(countInput.value) > parseInt(availableCount)) {
+            countInput.value = availableCount;
+            alert('Количество ограничено доступным на складе.');
+          }
+        } else {
+          countInput.removeAttribute('max');
+        }
+      }
+    });
+
+    // Ограничение ввода количества: если введенное значение превышает max, сбрасываем на max
+    document.addEventListener('input', function (event) {
+      if (event.target.classList.contains('count-input')) {
+        const max = event.target.getAttribute('max');
+        if (max && parseInt(event.target.value) > parseInt(max)) {
+          event.target.value = max;
+          alert('Нельзя указать больше доступного количества! Значение сброшено на ' + max);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

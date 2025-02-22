@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Создать заказ</title>
+  <style>
+    /* Основные переменные для дизайна */
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #e74c3c;
+      --hover-primary: #357ABD;
+      --hover-secondary: #c0392b;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --border-color: #ddd;
+      --container-max-width: 800px;
+    }
+
+    /* Сброс и базовые стили */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--border-radius);
+      background-color: var(--primary-color);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--hover-primary);
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    form input[type="text"],
+    form input[type="number"],
+    form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+
+    /* Стили для блока с продуктами */
+    .product-item {
+      background: var(--bg-color);
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 15px;
+    }
+
+    .product-item label {
+      margin-top: 10px;
+    }
+
+    .remove-product {
+      background: var(--secondary-color);
+      margin-top: 10px;
+    }
+
+    .remove-product:hover {
+      background: var(--hover-secondary);
+    }
+
+    #add-product {
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    /* Стили для блока должников */
+    #debtor-container {
+      margin-bottom: 15px;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    @media (max-width: 600px) {
+      form input[type="text"],
+      form input[type="number"],
+      form select {
+        font-size: 0.9rem;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Создать заказ</h1>
+    <button type="button" onclick="history.back()">Назад</button>
+
+    <form method="post" id="order-form" action="{% url 'create_order' %}">
+      {% csrf_token %}
+
+      <!-- Скрытое поле для пользователя -->
+      <input type="hidden" name="user" value="{{ request.session.user_name }}">
+
+      <label>Продукты:</label>
+      <div id="products-container">
+        <div class="product-item">
+          <label>Артикул:</label>
+          <input type="text" name="art[]" class="art-input" placeholder="Введите артикул">
+
+          <label>Цвет:</label>
+          <select name="colors[]" class="color-select">
+            <option value="">Выберите цвет</option>
+          </select>
+
+          <label>Количество:</label>
+          <input type="number" name="counts[]" class="count-input" min="1" placeholder="Введите кол-во">
+
+          <!-- Кнопка для удаления этой строки товара -->
+          <button type="button" class="remove-product">Удалить</button>
+        </div>
+      </div>
+
+      <button type="button" id="add-product">Добавить продукт</button>
+      <br><br>
+
+      <label for="payment">Способ оплаты:</label>
+      <select id="payment" name="payment" required>
+        <option value="Банк">Банк</option>
+        <option value="Наличные">Наличные</option>
+        <option value="Должник">Должник</option>
+      </select>
+      <br><br>
+
+      <div id="debtor-container" style="display: none;">
+        <label for="debtor">Выберите должника:</label>
+        <select id="debtor" name="debtor">
+          {% for debtor in debtors %}
+            <option value="{{ debtor.name }}">{{ debtor.name }} ({{ debtor.debet }} руб.)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <br>
+
+      <label for="discount">Скидка:</label>
+      <input type="number" id="discount" name="discount" step="0.01" value="0">
+      <br><br>
+
+      <p>Итоговая сумма: <span id="total-price">0</span> руб.</p>
+
+      <button type="submit">Создать заказ</button>
+    </form>
+  </div>
+
+  <script>
+    // ------------ Добавление нового продукта ------------
+    document.getElementById('add-product').addEventListener('click', function () {
+      const container = document.getElementById('products-container');
+      const firstItem = document.querySelector('.product-item');
+      const productItem = firstItem.cloneNode(true);
+
+      // Очищаем поля в новом товаре
+      const artInput = productItem.querySelector('.art-input');
+      artInput.value = '';
+
+      const colorSelect = productItem.querySelector('.color-select');
+      colorSelect.innerHTML = '<option value="">Выберите цвет</option>';
+      if (colorSelect.hasAttribute('data-fetched')) {
+        colorSelect.removeAttribute('data-fetched');
+      }
+
+      const countInput = productItem.querySelector('.count-input');
+      countInput.value = 1;
+
+      container.appendChild(productItem);
+    });
+
+    // ------------ Удаление продукта из формы ------------
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('remove-product')) {
+        const productItem = event.target.closest('.product-item');
+        productItem.remove();
+      }
+    });
+
+    // ------------ Показ/скрытие блока должников ------------
+    document.getElementById('payment').addEventListener('change', function () {
+      const debtorContainer = document.getElementById('debtor-container');
+      if (this.value === 'Должник') {
+        debtorContainer.style.display = 'block';
+      } else {
+        debtorContainer.style.display = 'none';
+      }
+    });
+
+    // ------------ При выборе цвета обновляем количество ------------
+    document.addEventListener('focusin', function(event) {
+      if (event.target.classList.contains('color-select')) {
+        const colorSelect = event.target;
+        if (colorSelect.hasAttribute('data-fetched')) {
+          return;
+        }
+
+        const productItem = colorSelect.closest('.product-item');
+        const artInput = productItem.querySelector('.art-input');
+        const art = artInput.value.trim();
+
+        if (!art) {
+          alert("Сначала введите артикул!");
+          return;
+        }
+
+        fetch(`/products/get_colors/?art=${art}&include_count=true`)
+          .then(response => response.json())
+          .then(colors => {
+            colorSelect.innerHTML = '<option value="">Выберите цвет</option>';
+            if (colors.length === 0) {
+              alert('Нет товара с таким артикулом!');
+            } else {
+              colors.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.color;
+                option.textContent = item.color;
+                option.setAttribute('data-count', item.count);
+                colorSelect.appendChild(option);
+              });
+            }
+            colorSelect.setAttribute('data-fetched', 'true');
+          })
+          .catch(err => {
+            console.error('Ошибка:', err);
+            alert('Ошибка при загрузке цветов.');
+          });
+      }
+    });
+
+    // ------------ Ограничение ввода количества ------------
+    document.addEventListener('change', function(event) {
+      if (event.target.classList.contains('color-select')) {
+        const selectedOption = event.target.selectedOptions[0];
+        const availableCount = selectedOption.getAttribute('data-count');
+
+        const productItem = event.target.closest('.product-item');
+        const countInput = productItem.querySelector('.count-input');
+
+        if (availableCount) {
+          countInput.setAttribute('max', availableCount);
+          if (parseInt(countInput.value) > parseInt(availableCount)) {
+            countInput.value = availableCount;
+          }
+        } else {
+          countInput.removeAttribute('max');
+        }
+      }
+    });
+
+    document.addEventListener('input', function(event) {
+      if (event.target.classList.contains('count-input')) {
+        const max = event.target.getAttribute('max');
+        if (max && parseInt(event.target.value) > parseInt(max)) {
+          event.target.value = max;
+          alert('Нельзя указать больше доступного количества!');
+        }
+      }
+    });
+
+    // ------------ При изменении артикула сбрасываем цвета ------------
+    document.addEventListener('input', function(event) {
+      if (event.target.classList.contains('art-input')) {
+        const productItem = event.target.closest('.product-item');
+        const colorSelect = productItem.querySelector('.color-select');
+
+        if (colorSelect.hasAttribute('data-fetched')) {
+          colorSelect.removeAttribute('data-fetched');
+        }
+        colorSelect.innerHTML = '<option value="">Выберите цвет</option>';
+      }
+    });
+  </script>
+</body>
+</html>

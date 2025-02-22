@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Добавить продукт</title>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #e74c3c;
+      --hover-primary: #357ABD;
+      --hover-secondary: #c0392b;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --border-color: #ddd;
+      --container-max-width: 600px;
+    }
+
+    /* Сброс базовых стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+
+    .nav {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+
+    /* Сообщения */
+    .messages {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    .messages li {
+      background: var(--secondary-color);
+      color: #fff;
+      padding: 10px;
+      border-radius: var(--border-radius);
+      margin-bottom: 5px;
+    }
+
+    /* Форма добавления продукта */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    form p {
+      margin-bottom: 15px;
+    }
+    form input,
+    form textarea,
+    form select {
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      margin-bottom: 15px;
+      width: 100%;
+    }
+    form button {
+      padding: 10px 15px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    form button:hover {
+      background: var(--hover-primary);
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      form input,
+      form textarea,
+      form select,
+      form button {
+        font-size: 0.9rem;
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Добавить продукт</h1>
+    <div class="nav">
+      <a href="{% url 'owner_page' %}">Назад</a>
+    </div>
+
+    <!-- Отображение сообщений -->
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="message {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <!-- Форма добавления продукта -->
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">Сохранить</button>
+    </form>
+  </div>
+</body>
+</html>

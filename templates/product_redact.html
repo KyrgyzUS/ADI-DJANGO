@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Редактирование товаров</title>
+  <style>
+    /* Основные переменные для дизайна */
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #e74c3c;
+      --hover-primary: #357ABD;
+      --hover-secondary: #c0392b;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --border-color: #ddd;
+      --container-max-width: 800px;
+    }
+
+    /* Сброс стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    /* Центральный контейнер */
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Заголовки и ссылки */
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    .nav-links {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .nav-links a,
+    .nav-links button {
+      text-decoration: none;
+      background: var(--primary-color);
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .nav-links a:hover,
+    .nav-links button:hover {
+      background: var(--hover-primary);
+    }
+
+    /* Форма выбора артикула */
+    form#art-form,
+    form#color-form,
+    form#product-form {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--light-bg);
+    }
+    form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    form input[type="text"],
+    form input[type="number"],
+    form textarea,
+    form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+    form button {
+      padding: 8px 12px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    form button:hover {
+      background: var(--hover-primary);
+    }
+
+    /* Изображение превью */
+    #preview-image {
+      max-width: 200px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+      form input,
+      form textarea,
+      form select,
+      form button {
+        font-size: 0.9rem;
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav-links">
+      <a href="{% url 'owner_page' %}">Назад</a>
+      <button type="button" onclick="history.back()">Вернуться</button>
+    </div>
+    <header>
+      <h1>Редактирование товаров</h1>
+    </header>
+
+    <!-- Форма выбора артикула -->
+    <form id="art-form">
+      <label for="art">Введите артикул:</label>
+      <input type="text" id="art" name="art">
+      <button type="button" id="find-colors">Найти</button>
+    </form>
+
+    <!-- Форма выбора цвета (скрыта по умолчанию) -->
+    <form id="color-form" style="display: none;">
+      <label for="color-select">Выберите цвет:</label>
+      <select id="color-select" name="color-select"></select>
+      <button type="button" id="find-product">Найти товар</button>
+    </form>
+
+    <!-- Форма редактирования продукта (скрыта по умолчанию) -->
+    <form id="product-form" style="display: none;">
+      <!-- ID продукта -->
+      <input type="hidden" id="product-id" name="product_id">
+      <input type="hidden" id="art-edit" name="art">
+      <label for="name1">Название:</label>
+      <input type="text" id="name1" name="name1">
+      <label for="price">Цена:</label>
+      <input type="number" id="price" name="price" step="0.01">
+      <label for="count">Количество:</label>
+      <input type="number" id="count" name="count">
+      <label for="color">Цвет:</label>
+      <input type="text" id="color" name="color">
+      <label for="description">Описание:</label>
+      <textarea id="description" name="description"></textarea>
+      <img id="preview-image" src="" alt="Превью">
+      <label for="image">Изображение:</label>
+      <input type="file" id="image" name="image">
+      <br>
+      <button type="button" id="save-product">Сохранить</button>
+      <button type="button" id="delete-product">Удалить</button>
+    </form>
+  </div>
+
+  <script>
+    // Удаление продукта
+    document.getElementById('delete-product').addEventListener('click', function () {
+      const productId = document.getElementById('product-id').value;
+      const csrftoken = getCookie('csrftoken');
+
+      if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+        fetch(`/products/delete/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ product_id: productId }),
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Товар успешно удалён.');
+              window.location.reload();
+            } else {
+              alert('Ошибка при удалении: ' + data.error);
+            }
+          })
+          .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при удалении товара.');
+          });
+      }
+    });
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    // 1. Поиск доступных цветов по артикулу
+    document.getElementById('find-colors').addEventListener('click', function () {
+      const art = document.getElementById('art').value;
+      fetch(`/products/get_colors/?art=${art}`)
+        .then(response => response.json())
+        .then(colors => {
+          const colorSelect = document.getElementById('color-select');
+          colorSelect.innerHTML = ''; // Очищаем старые опции
+          colors.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.color;
+            colorSelect.appendChild(option);
+          });
+          document.getElementById('color-form').style.display = 'block';
+        });
+    });
+
+    // 2. Загрузка данных продукта
+    document.getElementById('find-product').addEventListener('click', function () {
+      const productId = document.getElementById('color-select').value;
+      fetch(`/products/get_product/?product_id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Response from server:', data);
+          document.getElementById('art-edit').value = data.art;
+          document.getElementById('product-id').value = data.id;
+          document.getElementById('name1').value = data.name1;
+          document.getElementById('price').value = data.price;
+          document.getElementById('count').value = data.count;
+          document.getElementById('color').value = data.color;
+          document.getElementById('description').value = data.description;
+          if (data.image_url) {
+            document.getElementById('preview-image').src = data.image_url;
+          } else {
+            document.getElementById('preview-image').src = '';
+          }
+          document.getElementById('product-form').style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Ошибка при получении данных продукта:', error);
+        });
+    });
+
+    // 3. Сохранение изменений продукта
+    document.getElementById('save-product').addEventListener('click', function () {
+      const csrftoken = getCookie('csrftoken');
+      const formElement = document.getElementById('product-form');
+      const formData = new FormData(formElement);
+
+      fetch('/products/redact/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken
+        },
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+        } else {
+          alert('Ошибка: ' + JSON.stringify(data.errors));
+        }
+      })
+      .catch(error => console.error('Ошибка:', error));
+    });
+  </script>
+</body>
+</html>

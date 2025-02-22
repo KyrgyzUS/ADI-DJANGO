@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MIZADI</title>
+</head>
+<body>
+    <h1>ADIK</h1>
+    {%for i in data%}
+    #{{forloop.counter}} name:{{i.name}} {{i.password}}
+    <br>
+    {%endfor%}
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Список продуктов</title>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --hover-primary: #357ABD;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --input-border: 1px solid #ccc;
+      --container-max-width: 800px;
+    }
+    /* Сброс базовых стилей */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+    }
+    /* Центральный контейнер */
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 2rem;
+    }
+    /* Форма поиска */
+    .search-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .search-form input[type="text"] {
+      flex: 1 1 200px;
+      padding: 8px;
+      border: var(--input-border);
+      border-radius: var(--border-radius);
+    }
+    .search-form button {
+      padding: 8px 12px;
+      border: none;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .search-form button:hover {
+      background: var(--hover-primary);
+    }
+    /* Кнопка сброса поиска */
+    .reset-btn {
+      text-decoration: none;
+    }
+    /* Кнопка "Назад" */
+    .back-button {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .back-button button {
+      padding: 8px 12px;
+      border: none;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .back-button button:hover {
+      background: var(--hover-primary);
+    }
+    /* Список продуктов */
+    ul.products-list {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+    ul.products-list li {
+      border: var(--input-border);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    ul.products-list li h2 {
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+    ul.products-list li p {
+      margin-bottom: 10px;
+    }
+    ul.products-list li img {
+      display: block;
+      max-width: 200px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+    /* Пагинация */
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .pagination a {
+      display: inline-block;
+      margin: 0 5px;
+      padding: 8px 12px;
+      background: var(--primary-color);
+      color: #fff;
+      text-decoration: none;
+      border-radius: var(--border-radius);
+      transition: background 0.3s;
+    }
+    .pagination a:hover {
+      background: var(--hover-primary);
+    }
+    .pagination span {
+      margin: 0 10px;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+      .search-form input[type="text"],
+      .search-form button {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+      }
+      .back-button button {
+        font-size: 0.9rem;
+        padding: 6px 10px;
+      }
+      ul.products-list li h2 {
+        font-size: 1.3rem;
+      }
+      ul.products-list li p {
+        font-size: 0.9rem;
+      }
+      .pagination a {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Список продуктов</h1>
+
+    <!-- Форма поиска -->
+    <form class="search-form" method="get" action="">
+      <input type="text" name="q" placeholder="Поиск по артиклю" value="{{ query|default:'' }}">
+      <button type="submit">Искать</button>
+      <a class="reset-btn" href="{% url 'product_list' %}">
+        <button type="button">Сбросить поиск</button>
+      </a>
+    </form>
+
+    <div class="back-button">
+      <button type="button" onclick="history.back()">Назад</button>
+    </div>
+
+    <ul class="products-list">
+      {% for product in page_obj %}
+        <li>
+          <h2>{{ product.name1 }} — Артикул: {{ product.art }}</h2>
+          <p>Цена: {{ product.price }} som. (Кол-во: {{ product.count }}, {{ product.color }})</p>
+          {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name1 }}">
+          {% endif %}
+          <p>{{ product.description }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <!-- Пагинация -->
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Предыдущая</a>
+      {% endif %}
+      <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Следующая</a>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

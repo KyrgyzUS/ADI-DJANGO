@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Список заказов</title>
+  <style>
+    :root {
+      --primary-color: #4a90e2;
+      --secondary-color: #e74c3c;
+      --hover-primary: #357ABD;
+      --hover-secondary: #c0392b;
+      --bg-color: #f5f5f5;
+      --light-bg: #ffffff;
+      --text-color: #333;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --border-radius: 5px;
+      --border-color: #ddd;
+      --container-max-width: 800px;
+    }
+
+    /* Сброс базовых стилей */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: var(--container-max-width);
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    .messages {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 15px;
+    }
+    .messages li {
+      background: var(--secondary-color);
+      color: #fff;
+      padding: 10px;
+      border-radius: var(--border-radius);
+      margin-bottom: 5px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .nav-buttons a,
+    .nav-buttons button {
+      text-decoration: none;
+      background: var(--primary-color);
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .nav-buttons a:hover,
+    .nav-buttons button:hover {
+      background: var(--hover-primary);
+    }
+
+    form.filter-form {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    form.filter-form label {
+      flex: 1 1 150px;
+    }
+    form.filter-form input,
+    form.filter-form select {
+      flex: 1 1 150px;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+    }
+    form.filter-form button {
+      padding: 8px 12px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    form.filter-form button:hover {
+      background: var(--hover-primary);
+    }
+
+    ul.orders-list {
+      list-style: none;
+      padding: 0;
+    }
+    ul.orders-list li {
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    ul.orders-list li h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+    ul.orders-list li p {
+      margin: 5px 0;
+    }
+    ul.orders-list li button {
+      margin-right: 5px;
+      padding: 8px 12px;
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    ul.orders-list li button:hover {
+      background: var(--hover-primary);
+    }
+    .details-container {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      background: #fafafa;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+      .nav-buttons a,
+      .nav-buttons button,
+      form.filter-form input,
+      form.filter-form select,
+      form.filter-form button,
+      ul.orders-list li button {
+        padding: 8px 12px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <header>
+      <h1>Список заказов</h1>
+    </header>
+
+    <div class="nav-buttons">
+      <a href="{% url 'create_order' %}">Создать заказ</a>
+      <button type="button" onclick="history.back()">Назад</button>
+    </div>
+
+    <form class="filter-form" method="get" action="{% url 'orders_list' %}">
+      <label for="payment">Способ оплаты:</label>
+      <select name="payment" id="payment">
+        <option value="">Все</option>
+        <option value="Банк">Банк</option>
+        <option value="Наличные">Наличные</option>
+        <option value="Должник">Должник</option>
+      </select>
+
+      <label for="user">Пользователь:</label>
+      <input type="text" name="user" id="user">
+
+      <label for="data_creation_start">Дата создания (от):</label>
+      <input type="date" name="data_creation_start" id="data_creation_start">
+
+      <label for="data_creation_end">Дата создания (до):</label>
+      <input type="date" name="data_creation_end" id="data_creation_end">
+
+      <label for="status">Статус:</label>
+      <select name="status" id="status">
+        <option value="">Все</option>
+        <option value="True">Завершён</option>
+        <option value="False">Не завершён</option>
+      </select>
+
+      <button type="submit">Фильтровать</button>
+    </form>
+
+    <ul class="orders-list">
+      {% for order in orders reversed %}
+        <li>
+          <h2>Заказ {{ order.id }}</h2>
+          <p>Пользователь: {{ order.user }}</p>
+          <p>Сумма: {{ order.total_price }} руб.</p>
+          <p>Статус: {{ order.status|yesno:"Завершён,Не завершён" }}</p>
+          <button onclick="markAsPaid({{ order.id }})">Оплачено</button>
+          <button onclick="window.location.href='{% url 'edit_order' order.id %}'">Редактировать</button>
+          <button onclick="deleteOrder({{ order.id }})">Удалить</button>
+          <button onclick="Details({{ order.id }})">Детали</button>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <script>
+    function Details(orderId) {
+      fetch(`/orders/details/${orderId}/`, { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            alert(data.error || 'Не удалось получить детали заказа.');
+            return;
+          }
+          let html = `<h3>Детали заказа №${data.order_id}</h3>`;
+          html += `<p>Способ оплаты: ${data.payment}</p>`;
+          if (data.debtor) {
+            html += `<p>Должник: ${data.debtor}</p>`;
+          }
+          html += '<table border="1" style="margin:10px 0; width:100%;">';
+          html += '<tr><th>Артикул</th><th>Цвет</th><th>Цена за ед.</th><th>Количество</th><th>Сумма</th></tr>';
+          let total = 0;
+          data.products.forEach(prod => {
+            const art = prod.art || '-';
+            const color = prod.color || '-';
+            const price = parseFloat(prod.unit_price || '0') || 0;
+            const count = parseFloat(prod.count || '0') || 0;
+            const line_total = parseFloat(prod.line_total || '0') || 0;
+            total += line_total;
+            html += `<tr>
+                       <td>${art}</td>
+                       <td>${color}</td>
+                       <td>${price.toFixed(2)}</td>
+                       <td>${count}</td>
+                       <td>${line_total.toFixed(2)}</td>
+                     </tr>`;
+          });
+          html += `<tr style="font-weight:bold;">
+                     <td colspan="4">Итого</td>
+                     <td>${total.toFixed(2)}</td>
+                   </tr>`;
+          html += '</table>';
+
+          // Ищем блок для деталей в текущем li или создаём новый
+          const liElement = document.querySelector(`li:has(button[onclick="Details(${orderId})"])`);
+          let detailsDiv = liElement.querySelector('.details-container');
+          if (!detailsDiv) {
+            detailsDiv = document.createElement('div');
+            detailsDiv.classList.add('details-container');
+            liElement.appendChild(detailsDiv);
+          }
+          detailsDiv.innerHTML = html;
+        })
+        .catch(err => {
+          console.error('Ошибка при получении деталей заказа:', err);
+          alert('Ошибка при получении деталей заказа.');
+        });
+    }
+
+    function deleteOrder(orderId) {
+      if (confirm('Вы уверены, что хотите удалить заказ?')) {
+        fetch(`/orders/delete/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({ id: orderId }),
+        }).then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Заказ удалён.');
+              window.location.reload();
+            } else {
+              alert('Ошибка: ' + data.error);
+            }
+          });
+      }
+    }
+
+    function markAsPaid(orderId) {
+      if (confirm('Вы уверены, что хотите отметить заказ как оплаченный?')) {
+        fetch(`/orders/update_status/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+          body: JSON.stringify({ id: orderId }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+            window.location.reload();
+          } else {
+            alert('Ошибка: ' + data.error);
+          }
+        })
+        .catch(error => {
+          console.error('Ошибка:', error);
+          alert('Произошла ошибка при обновлении статуса.');
+        });
+      }
+    }
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          cookie = cookie.trim();
+          if (cookie.startsWith(`${name}=`)) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
+</html>
